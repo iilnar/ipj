@@ -1,6 +1,5 @@
 package multithreading.generator;
 
-import java.security.SecureRandom;
 import java.util.Random;
 import java.util.stream.Collectors;
 
@@ -8,8 +7,10 @@ import java.util.stream.Collectors;
  * Created by Ilnar on 17/01/2018.
  */
 public class RandomStringStream implements StringStream {
-    private Random rnd = new Random();
-    private String alphabet = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ0123456789.,;:-?!()\"";
+    private final Random rnd = new Random();
+    private static final String numbers = "0123456789";
+    private static final String letters = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+    private static final String alphabet = numbers + letters;
 
     @Override
     public String next() {

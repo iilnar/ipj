@@ -8,14 +8,18 @@ import multithreading.exceptions.WrongCharException;
 public class TokenizerStream implements StringStream {
     private char[] str;
     private int pos = 0;
-    private char[] alphabet = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ0123456789.,;:-?!()\"".toCharArray();
+
+    private static char[] punctuation = ".,;:-?!()\"".toCharArray();
+    private static String numbers = "0123456789";
+    private static String letters = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
+    private static char[] allowed = (numbers + letters).toCharArray();
 
     public TokenizerStream(String s) {
         this.str = s.toCharArray();
     }
 
     private boolean checkChar(char c) {
-        for (char symbol : alphabet) {
+        for (char symbol : allowed) {
             if (c == symbol) {
                 return true;
             }
@@ -23,18 +27,30 @@ public class TokenizerStream implements StringStream {
         return false;
     }
 
-    private void skipWhitespace() {
-        while (pos < str.length && Character.isWhitespace(str[pos])) {
+    private boolean isDelimiter(char c) {
+        if (Character.isWhitespace(c)) {
+            return true;
+        }
+        for (char symbol : punctuation) {
+            if (c == symbol) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void skipDelimiters() {
+        while (pos < str.length && isDelimiter(str[pos])) {
             pos++;
         }
     }
 
     @Override
     public String next() throws WrongCharException {
-        skipWhitespace();
+        skipDelimiters();
         int beg = pos;
         while (pos < str.length) {
-            if (Character.isWhitespace(str[pos])) {
+            if (isDelimiter(str[pos])) {
                 break;
             }
             if (!checkChar(str[pos])) {
@@ -47,6 +63,7 @@ public class TokenizerStream implements StringStream {
 
     @Override
     public boolean hasNext() {
+        skipDelimiters();
         return pos != str.length;
     }
 }

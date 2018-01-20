@@ -1,12 +1,9 @@
 package multithreading;
 
-import multithreading.generator.RandomStringStream;
 import multithreading.generator.TokenizerStream;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -26,20 +23,14 @@ public class Master {
         pool = new Thread[threads];
         storage = new ConcurrentHashMap<>();
 
-        Scanner sc = null;
-        try {
-            sc = new Scanner(new File(filename));
+        try (Scanner sc = new Scanner(new File(filename));) {
+            for (int i = 0; i < threads; ++i) {
+//            slaves[i] = new Slave(this, new RandomStringStream(), storage);
+                slaves[i] = new Slave(this, new TokenizerStream(sc.nextLine()), storage);
+            }
         } catch (FileNotFoundException e) {
             System.err.println("File " + filename + " not found.");
-        }
-
-        for (int i = 0; i < threads; ++i) {
-//            slaves[i] = new Slave(this, new RandomStringStream(), storage);
-            slaves[i] = new Slave(this, new TokenizerStream(sc.nextLine()), storage);
-        }
-
-        if (sc != null) {
-            sc.close();
+            return;
         }
 
         long startTime = System.currentTimeMillis();
