@@ -36,5 +36,10 @@ public class Slave implements Runnable {
                 master.stop();
             }
         }
+        stop();
+    }
+
+    public void stop() {
+        ss.close();
     }
 }

@@ -22,4 +22,8 @@ public class RandomStringStream implements StringStream {
     public boolean hasNext() {
         return true;
     }
+
+    @Override
+    public void close() {
+    }
 }

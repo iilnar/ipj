@@ -14,6 +14,10 @@ public class TokenizerStream implements StringStream {
     private static String letters = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
     private static char[] allowed = (numbers + letters).toCharArray();
 
+    public TokenizerStream() {
+        this("");
+    }
+
     public TokenizerStream(String s) {
         this.str = s.toCharArray();
     }
@@ -65,5 +69,9 @@ public class TokenizerStream implements StringStream {
     public boolean hasNext() {
         skipDelimiters();
         return pos != str.length;
+    }
+
+    @Override
+    public void close() {
     }
 }

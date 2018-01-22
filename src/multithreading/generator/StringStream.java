@@ -8,4 +8,6 @@ import multithreading.exceptions.WrongCharException;
 public interface StringStream {
     String next() throws WrongCharException;
     boolean hasNext();
+
+    void close();
 }

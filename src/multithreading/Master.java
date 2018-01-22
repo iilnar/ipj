@@ -1,10 +1,9 @@
 package multithreading;
 
-import multithreading.generator.TokenizerStream;
+import multithreading.generator.FileStream;
+import multithreading.generator.RandomStringStream;
 
-import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.Scanner;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -16,30 +15,43 @@ public class Master {
     private ConcurrentHashMap<String, Object> storage;
     private volatile boolean workFlag = true;
 
-    private static String filename = "input.txt";
+    public Master(String[] filenames) {
+        int threads = filenames.length;
+
+        slaves = new Slave[threads];
+        pool = new Thread[threads];
+        storage = new ConcurrentHashMap<>();
+
+        for (int i = 0; i < threads; ++i) {
+            try {
+                slaves[i] = new Slave(this, new FileStream(filenames[i]), storage);
+            } catch (FileNotFoundException e) {
+                for (int j = 0; j < i; ++j) {
+                    slaves[i].stop();
+                }
+                throw new RuntimeException("Can't create master", e);
+            }
+        }
+    }
 
     public Master(int threads) {
         slaves = new Slave[threads];
         pool = new Thread[threads];
         storage = new ConcurrentHashMap<>();
 
-        try (Scanner sc = new Scanner(new File(filename));) {
-            for (int i = 0; i < threads; ++i) {
-//            slaves[i] = new Slave(this, new RandomStringStream(), storage);
-                slaves[i] = new Slave(this, new TokenizerStream(sc.nextLine()), storage);
-            }
-        } catch (FileNotFoundException e) {
-            System.err.println("File " + filename + " not found.");
-            return;
+        for (int i = 0; i < threads; ++i) {
+            slaves[i] = new Slave(this, new RandomStringStream(), storage);
         }
+    }
 
+    public void run() {
         long startTime = System.currentTimeMillis();
 
-        for (int i = 0; i < threads; ++i) {
+        for (int i = 0; i < pool.length; ++i) {
             pool[i] = new Thread(slaves[i]);
             pool[i].start();
         }
-        for (int i = 0; i < threads; ++i) {
+        for (int i = 0; i < pool.length; ++i) {
             try {
                 pool[i].join();
             } catch (InterruptedException e) {
@@ -61,18 +73,7 @@ public class Master {
         workFlag = false;
     }
 
-    public static void main(String[] args) throws FileNotFoundException {
-        int n = 4;
-//        RandomStringStream rs = new RandomStringStream();
-//        PrintWriter pw = new PrintWriter(filename);
-//        for (int j = 0; j < n; j++) {
-//            for (int i = 0; i < 1000000; i++) {
-//                pw.print(rs.next() + " ");
-//            }
-//            pw.println(rs.next());
-//        }
-//        pw.close();
-
-        new Master(n);
+    public static void main(String[] args) {
+        new Master(args).run();
     }
 }
