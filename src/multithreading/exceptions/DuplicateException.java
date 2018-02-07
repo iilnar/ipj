@@ -3,7 +3,7 @@ package multithreading.exceptions;
 /**
  * Created by Ilnar on 17/01/2018.
  */
-public class DuplicateException extends CommonException {
+public class DuplicateException extends Exception {
     private String word;
 
     public DuplicateException(String duplicate) {

@@ -1,7 +1,7 @@
 package multithreading;
 
-import multithreading.exceptions.CommonException;
 import multithreading.exceptions.DuplicateException;
+import multithreading.exceptions.WrongCharException;
 import multithreading.generator.StringStream;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -31,7 +31,7 @@ public class Slave implements Runnable {
                 if (storage.putIfAbsent(token, setMaker) != null) {
                     throw new DuplicateException(token);
                 }
-            } catch (CommonException e) {
+            } catch (DuplicateException | WrongCharException e) {
                 System.err.println(e.getMessage());
                 master.stop();
             }
