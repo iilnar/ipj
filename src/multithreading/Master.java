@@ -4,60 +4,58 @@ import multithreading.generator.FileStream;
 import multithreading.generator.RandomStringStream;
 
 import java.io.FileNotFoundException;
+import java.io.UncheckedIOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by Ilnar on 17/01/2018.
  */
 public class Master {
-    private Slave[] slaves;
-    private Thread[] pool;
+    private List<Slave> slaves;
+    private List<Thread> pool;
     private ConcurrentHashMap<String, Object> storage;
     private volatile boolean workFlag = true;
 
     public Master(String[] filenames) {
-        int threads = filenames.length;
-
-        slaves = new Slave[threads];
-        pool = new Thread[threads];
         storage = new ConcurrentHashMap<>();
 
-        for (int i = 0; i < threads; ++i) {
-            try {
-                slaves[i] = new Slave(this, new FileStream(filenames[i]), storage);
-            } catch (FileNotFoundException e) {
-                for (int j = 0; j < i; ++j) {
-                    slaves[i].stop();
+        try {
+            slaves = Arrays.stream(filenames).map(filename -> {
+                try {
+                    return new Slave(Master.this, new FileStream(filename), storage);
+                } catch (FileNotFoundException e) {
+                    throw new UncheckedIOException(e);
                 }
-                throw new RuntimeException("Can't create master", e);
-            }
+            }).collect(Collectors.toList());
+        } catch (UncheckedIOException e) {
+            slaves.stream().filter(Objects::nonNull).forEach(Slave::stop);
+            throw new RuntimeException("Can't create master", e.getCause());
         }
     }
 
     public Master(int threads) {
-        slaves = new Slave[threads];
-        pool = new Thread[threads];
         storage = new ConcurrentHashMap<>();
-
-        for (int i = 0; i < threads; ++i) {
-            slaves[i] = new Slave(this, new RandomStringStream(), storage);
-        }
+        slaves = IntStream.range(0, threads).mapToObj(x -> new Slave(this, new RandomStringStream(), storage)).collect(Collectors.toList());
     }
 
     public void run() {
         long startTime = System.currentTimeMillis();
 
-        for (int i = 0; i < pool.length; ++i) {
-            pool[i] = new Thread(slaves[i]);
-            pool[i].start();
-        }
-        for (int i = 0; i < pool.length; ++i) {
+        pool = slaves.stream().map(Thread::new).collect(Collectors.toList());
+        pool.forEach(Thread::start);
+
+        pool.forEach(thread -> {
             try {
-                pool[i].join();
+                thread.join();
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
-        }
+        });
 
         long endTime = System.currentTimeMillis();
 
@@ -74,6 +72,6 @@ public class Master {
     }
 
     public static void main(String[] args) {
-        new Master(args).run();
+        new Master(4).run();
     }
 }

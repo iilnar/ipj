@@ -9,10 +9,10 @@ public class TokenizerStream implements StringStream {
     private char[] str;
     private int pos = 0;
 
-    private static char[] punctuation = ".,;:-?!()\"".toCharArray();
+    private static String punctuation = ".,;:-?!()\"";
     private static String numbers = "0123456789";
     private static String letters = "абвгдеёжзийклмнопрстуфхцчшщъыьэюяАБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ";
-    private static char[] allowed = (numbers + letters).toCharArray();
+    private static String allowed = numbers + letters;
 
     public TokenizerStream() {
         this("");
@@ -23,24 +23,11 @@ public class TokenizerStream implements StringStream {
     }
 
     private boolean checkChar(char c) {
-        for (char symbol : allowed) {
-            if (c == symbol) {
-                return true;
-            }
-        }
-        return false;
+        return allowed.chars().anyMatch(sym -> sym == c);
     }
 
     private boolean isDelimiter(char c) {
-        if (Character.isWhitespace(c)) {
-            return true;
-        }
-        for (char symbol : punctuation) {
-            if (c == symbol) {
-                return true;
-            }
-        }
-        return false;
+        return Character.isWhitespace(c) || punctuation.chars().allMatch(sym -> sym == c);
     }
 
     private void skipDelimiters() {
